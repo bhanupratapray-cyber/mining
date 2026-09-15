@@ -56,9 +56,9 @@ async function performBackgroundSync() {
 
 async function seedLocalDB() {
     await db.setItem('workers', [
-        { id: '001', name: 'John Doe', gender: 'M', role: 'Driver', contact: '1234567890' },
-        { id: '002', name: 'Jane Smith', gender: 'F', role: 'Operator', contact: '0987654321' },
-        { id: '003', name: 'Bob Brown', gender: 'M', role: 'Helper', contact: '5551234567' },
+        { id: '001', name: 'Ramesh', gender: 'M', role: 'Driver', contact: '1234567890' },
+        { id: '002', name: 'Pooja', gender: 'F', role: 'Operator', contact: '0987654321' },
+        { id: '003', name: 'Suresh', gender: 'M', role: 'Helper', contact: '5551234567' },
     ]);
     await db.setItem('supervisors', [
         { id: 'S01', name: 'Super One', pin: '1234', shiftControl: 'Auto' },
