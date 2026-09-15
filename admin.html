@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Portal - Rocksteady</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="sidebar-overlay" id="sidebar-overlay" onclick="toggleMenu()"></div>
+
+    <div class="dashboard-layout">
+        <!-- Sidebar Navigation -->
+        <div class="sidebar" id="sidebar">
+            <div class="header">
+                Admin Menu
+            </div>
+            <div class="sidebar-item active" id="tab-dashboard" onclick="setActiveTab('dashboard')">Dashboard</div>
+            <div class="sidebar-item" id="tab-bulk" onclick="setActiveTab('bulk')">Bulk Employee Entry</div>
+            <div class="sidebar-item" id="tab-workers" onclick="setActiveTab('workers')">Manage Workers</div>
+            <div class="sidebar-item" id="tab-supervisors" onclick="setActiveTab('supervisors')">Manage Supervisors</div>
+            <div class="sidebar-item" id="tab-history" onclick="setActiveTab('history')">Attendance History</div>
+            <div class="sidebar-item" style="margin-top: auto; border-top: 1px solid var(--border-color);">
+                <a href="index.html" style="color: var(--danger); text-decoration: none;">Logout</a>
+            </div>
+        </div>
+        
+        <!-- Main Content -->
+        <div class="main-content">
+            <div class="header">
+                <div class="header-icons">
+                    <span class="icon-btn" onclick="toggleMenu()">☰</span>
+                </div>
+                Admin Portal
+                <div class="header-icons">
+                    <span class="icon-btn" onclick="openSettings()">⚙️</span>
+                </div>
+            </div>
+            
+            <!-- Dashboard View -->
+            <div id="content-dashboard" class="container">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                    <h2 style="margin: 0;">Shift Summaries</h2>
+                    <input type="date" id="dash-date" class="input-field" style="width: auto; margin: 0;" onchange="renderDashboard()">
+                </div>
+                
+                <div id="shift-blocks"></div>
+            </div>
+
+            <!-- Bulk Upload View -->
+            <div id="content-bulk" class="container hidden" style="text-align: center;">
+                <h2>Bulk Employee Entry</h2>
+                <div style="border: 2px dashed var(--text-color); padding: 50px; margin: 20px 0; border-radius: 10px;" id="drop-zone">
+                    <p>Select or Drop .csv file here</p>
+                    <input type="file" id="csv-file" accept=".csv" style="display:none;" onchange="handleFileSelect(event)">
+                    <button class="btn btn-outline" style="width: auto;" onclick="document.getElementById('csv-file').click()">Browse File</button>
+                    <p id="file-name" style="margin-top: 10px; font-weight: bold;"></p>
+                </div>
+                <button class="btn btn-success" id="upload-btn" onclick="processUpload()" style="margin-bottom: 20px; display: none;">UPLOAD & SYNC</button>
+                <button class="btn btn-solid" style="width: auto;" onclick="downloadTemplate()">Download CSV Template</button>
+            </div>
+
+            <!-- Manage Workers View -->
+            <div id="content-workers" class="container hidden">
+                <h2>Manage Workers</h2>
+                <div class="tabs" id="admin-role-tabs" style="margin-bottom: 20px;"></div>
+                <div id="admin-workers-list"></div>
+            </div>
+
+            <!-- Manage Supervisors View -->
+            <div id="content-supervisors" class="container hidden">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                    <h2 style="margin:0;">Manage Supervisors</h2>
+                    <button class="btn btn-outline" style="width: auto; padding: 5px 15px;" onclick="openSupervisorForm()">+ Add</button>
+                </div>
+                <div id="admin-supervisors-list"></div>
+            </div>
+
+            <!-- History View -->
+            <div id="content-history" class="container hidden">
+                <h2>Attendance History</h2>
+                <div style="display: flex; gap: 10px; margin-bottom: 20px; flex-wrap: wrap;">
+                    <div style="flex:1;">
+                        <label>Start Date</label>
+                        <input type="date" id="hist-start" class="input-field" style="margin-top: 5px;">
+                    </div>
+                    <div style="flex:1;">
+                        <label>End Date</label>
+                        <input type="date" id="hist-end" class="input-field" style="margin-top: 5px;">
+                    </div>
+                    <div style="display: flex; align-items: flex-end;">
+                        <button class="btn btn-solid" style="width: auto; margin:0;" onclick="renderHistory()">Filter</button>
+                    </div>
+                </div>
+                <button class="btn btn-outline" onclick="exportHistory()">Export Data (CSV)</button>
+                
+                <div style="overflow-x: auto; margin-top: 20px;">
+                    <table id="history-table">
+                        <!-- History Data -->
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modals -->
+    <div id="settings-modal" class="modal-overlay hidden" onclick="if(event.target===this) closeSettings()">
+        <div class="modal-content">
+            <h2 style="margin-top:0;">Settings</h2>
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                <span>Light Theme</span>
+                <label class="toggle-switch">
+                    <input type="checkbox" id="theme-toggle" onchange="toggleTheme(this.checked)">
+                    <span class="slider"></span>
+                </label>
+            </div>
+            <div style="color: #888; font-style: italic; border-top: 1px solid var(--border-color); padding-top: 15px; text-align: center;">
+                <span style="font-size: 20px; display:block; margin-bottom: 5px;">🚧</span>
+                Updates are coming soon...<br>(Payroll & SMS)
+            </div>
+            <button class="btn btn-outline" onclick="closeSettings()" style="margin-top: 20px;">Close</button>
+        </div>
+    </div>
+
+    <!-- Worker Edit Modal -->
+    <div id="worker-modal" class="modal-overlay hidden" onclick="if(event.target===this) this.classList.add('hidden')">
+        <div class="modal-content">
+            <h2 style="margin-top:0;">Edit Worker</h2>
+            <input type="hidden" id="edit-w-id">
+            <input type="text" id="edit-w-name" class="input-field" placeholder="Name">
+            <input type="text" id="edit-w-contact" class="input-field" placeholder="Contact">
+            <input type="text" id="edit-w-role" class="input-field" placeholder="Role">
+            <button class="btn btn-success" onclick="saveWorker()">Save</button>
+            <button class="btn btn-danger" onclick="removeWorker()">Remove Worker</button>
+            <button class="btn btn-outline" onclick="document.getElementById('worker-modal').classList.add('hidden')">Cancel</button>
+        </div>
+    </div>
+
+    <!-- Supervisor Edit Modal -->
+    <div id="supervisor-modal" class="modal-overlay hidden" onclick="if(event.target===this) this.classList.add('hidden')">
+        <div class="modal-content">
+            <h2 style="margin-top:0;" id="sup-modal-title">Edit Supervisor</h2>
+            <input type="text" id="edit-s-id" class="input-field" placeholder="Supervisor ID">
+            <input type="text" id="edit-s-name" class="input-field" placeholder="Name">
+            <input type="password" id="edit-s-pin" class="input-field" placeholder="PIN (4-Digits)">
+            
+            <div style="margin-top: 10px; margin-bottom: 10px;">
+                <label>Shift Control Permission:</label>
+                <select id="edit-s-shift" class="input-field" style="margin-top: 5px;">
+                    <option value="Auto">Auto (Strict Mode)</option>
+                    <option value="Manual">Manual (Select by Supervisor)</option>
+                </select>
+            </div>
+            
+            <button class="btn btn-success" onclick="saveSupervisor()">Save</button>
+            <button class="btn btn-danger" id="btn-remove-sup" onclick="removeSupervisor()">Remove Supervisor</button>
+            <button class="btn btn-outline" onclick="document.getElementById('supervisor-modal').classList.add('hidden')">Cancel</button>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+    <script src="admin.js"></script>
+</body>
+</html>
