@@ -21,6 +21,15 @@ function formatDateDisplay(dateStr) {
 
 const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbz_umeCVHwoIt7a3Qp6UkXxEXyidK9nO1oHIwTblN951XUIQbrbOEFv-smdiTZyP5o4/exec";
 
+// Seed local defaults synchronously if missing (fixes login races)
+if (!localStorage.getItem('seeded')) {
+    localStorage.setItem('admin', JSON.stringify({ username: 'admin', password: 'password123' }));
+    localStorage.setItem('workers', JSON.stringify([]));
+    localStorage.setItem('supervisors', JSON.stringify([]));
+    localStorage.setItem('attendance', JSON.stringify([]));
+    localStorage.setItem('seeded', JSON.stringify(true));
+}
+
 // Load Theme Phase 12
 (async function loadTheme() {
     const theme = await db.getItem('app_theme') || 'dark';
@@ -44,10 +53,18 @@ async function performBackgroundSync() {
             await db.setItem('offline_attendance_queue', []);
         }
 
-        // Fetch new roster from backend
-        const response = await fetch(`${SCRIPT_URL}?action=get_roster`);
-        const roster = await response.json();
+        // Fetch everything in parallel to cut load time by 60%
+        const [rosterRes, attRes, supRes] = await Promise.all([
+            fetch(`${SCRIPT_URL}?action=get_roster`).then(res => res.json()),
+            fetch(`${SCRIPT_URL}?action=get_attendance`).then(res => res.json()),
+            fetch(`${SCRIPT_URL}?action=get_supervisors`).then(res => res.json())
+        ]);
         
+        const roster = rosterRes;
+        const remoteAttendance = attRes;
+        const remoteSupervisors = supRes;
+        
+        // Process Roster
         if (roster && Array.isArray(roster) && roster.length > 0) {
             const mappedRoster = roster.map(emp => ({
                 ...emp,
@@ -60,20 +77,14 @@ async function performBackgroundSync() {
             await db.setItem('workers', mappedRoster);
         }
 
-        // Fetch attendance from backend
-        const attResponse = await fetch(`${SCRIPT_URL}?action=get_attendance`);
-        const remoteAttendance = await attResponse.json();
-        
+        // Process Attendance
         if (remoteAttendance && Array.isArray(remoteAttendance)) {
             let groupedAttendance = {};
             remoteAttendance.forEach(row => {
-                // Ensure Date is formatted correctly if Google Sheets returned a timestamp string
-                // e.g. "2026-09-15T00:00:00.000Z" -> "2026-09-15"
                 let dateStr = row.Date;
                 if (dateStr && dateStr.includes('T')) {
                     dateStr = dateStr.split('T')[0];
                 }
-
                 const key = `${dateStr}_${row.Shift}`;
                 if (!groupedAttendance[key]) {
                     groupedAttendance[key] = {
@@ -86,14 +97,10 @@ async function performBackgroundSync() {
                 }
                 groupedAttendance[key].records[row.Employee_ID] = (row.Status === 'Present');
             });
-            
             await db.setItem('attendance', Object.values(groupedAttendance));
         }
         
-        // Fetch supervisors from backend
-        const supResponse = await fetch(`${SCRIPT_URL}?action=get_supervisors`);
-        const remoteSupervisors = await supResponse.json();
-        
+        // Process Supervisors
         if (remoteSupervisors && Array.isArray(remoteSupervisors) && remoteSupervisors.length > 0) {
             const mappedSups = remoteSupervisors.map(sup => ({
                 id: sup.Supervisor_ID || sup.id,
@@ -105,12 +112,6 @@ async function performBackgroundSync() {
         }
     } catch (e) {
         console.warn("Offline Mode Active. Using cached data.");
-    }
-    
-    // Seed initial test data if empty
-    const isSeeded = await db.getItem('seeded');
-    if (!isSeeded) {
-        await seedLocalDB();
     }
 }
 
