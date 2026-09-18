@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - Ray Attendance</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <!-- Phase 1: Loading Screen -->
+    <div id="loading-screen">
+        <h1 style="margin-bottom: 30px; font-size: 22px; color: var(--primary); text-align: center; letter-spacing: 1px;">Y.L.A Infrastructure Pvt Ltd.</h1>
+        <div class="pickaxe-icon"></div>
+        <h2 id="loading-text">SYNCING DATA<span id="dots">...</span></h2>
+    </div>
+
+    <!-- Phase 5: Login Screen -->
+    <div class="login-screen hidden" id="login-screen">
+        <div class="login-box">
+            <div class="segment-tabs">
+                <button id="tab-supervisor" class="active" onclick="setRole('supervisor')">SUPERVISOR</button>
+                <button id="tab-admin" onclick="setRole('admin')">ADMIN</button>
+            </div>
+
+            <div id="supervisor-form">
+                <input type="text" id="sup-id" class="input-field" placeholder="Supervisor ID">
+                <input type="password" id="sup-pin" class="input-field" placeholder="4-Digit PIN" pattern="\d{4}" maxlength="4">
+            </div>
+
+            <div id="admin-form" class="hidden">
+                <input type="text" id="admin-user" class="input-field" placeholder="Username">
+                <input type="password" id="admin-pass" class="input-field" placeholder="Password">
+            </div>
+
+            <div id="error-msg" class="text-danger hidden"></div>
+
+            <button class="btn btn-warning" id="login-btn" onclick="handleLogin()">ENTER SITE</button>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+    <script src="login.js"></script>
+</body>
+</html>

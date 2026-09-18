@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Portal - Ray Attendance</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+    
+    <!-- Export Libraries -->
+    <script src="https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
+</head>
+<body>
+    <div class="sidebar-overlay" id="sidebar-overlay" onclick="toggleMenu()"></div>
+
+    <div class="dashboard-layout">
+        <!-- Sidebar Navigation -->
+        <div class="sidebar" id="sidebar">
+            <div class="header">
+                Admin Menu
+            </div>
+            <div class="sidebar-item active" id="tab-dashboard" onclick="setActiveTab('dashboard')">Dashboard</div>
+            <div class="sidebar-item" id="tab-bulk" onclick="setActiveTab('bulk')">Bulk Employee Entry</div>
+            <div class="sidebar-item" id="tab-workers" onclick="setActiveTab('workers')">Manage Workers</div>
+            <div class="sidebar-item" id="tab-supervisors" onclick="setActiveTab('supervisors')">Manage Supervisors</div>
+            <div class="sidebar-item" id="tab-history" onclick="setActiveTab('history')">Attendance History</div>
+            <div class="sidebar-item" style="margin-top: auto; border-top: 1px solid var(--border-color);">
+                <a href="index.html" style="color: var(--danger); text-decoration: none;">Logout</a>
+            </div>
+        </div>
+        
+        <!-- Main Content -->
+        <div class="main-content">
+            <div class="header">
+                <div class="header-icons">
+                    <span class="icon-btn" onclick="toggleMenu()">☰</span>
+                </div>
+                Admin Portal
+                <div class="header-icons">
+                    <span class="icon-btn" onclick="openSettings()">⚙️</span>
+                </div>
+            </div>
+            
+            <!-- Dashboard View -->
+            <div id="content-dashboard" class="container">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                    <h2 style="margin: 0;">Shift Summaries</h2>
+                    <div style="display: flex; gap: 10px; align-items: center;">
+                        <button id="refresh-btn" class="btn btn-outline" style="width: auto; margin: 0; padding: 5px 15px;" onclick="refreshDashboard()">Refresh Data</button>
+                        <input type="date" id="dash-date" class="input-field" style="width: auto; margin: 0;" onchange="renderDashboard()">
+                    </div>
+                </div>
+                
+                <div id="shift-blocks"></div>
+            </div>
+
+            <!-- Bulk Upload View -->
+            <div id="content-bulk" class="container hidden" style="text-align: center;">
+                <h2>Bulk Employee Entry</h2>
+                <div style="border: 2px dashed var(--text-color); padding: 50px; margin: 20px 0; border-radius: 10px;" id="drop-zone">
+                    <p>Select or Drop .csv file here</p>
+                    <input type="file" id="csv-file" accept=".csv" style="display:none;" onchange="handleFileSelect(event)">
+                    <button class="btn btn-outline" style="width: auto;" onclick="document.getElementById('csv-file').click()">Browse File</button>
+                    <p id="file-name" style="margin-top: 10px; font-weight: bold;"></p>
+                </div>
+                <button class="btn btn-success" id="upload-btn" onclick="processUpload()" style="margin-bottom: 20px; display: none;">UPLOAD & SYNC</button>
+                <button class="btn btn-solid" style="width: auto;" onclick="downloadTemplate()">Download CSV Template</button>
+            </div>
+
+            <!-- Manage Workers View -->
+            <div id="content-workers" class="container hidden">
+                <h2>Manage Workers</h2>
+                <div class="tabs" id="admin-role-tabs" style="margin-bottom: 20px;"></div>
+                <div id="admin-workers-list"></div>
+            </div>
+
+            <!-- Manage Supervisors View -->
+            <div id="content-supervisors" class="container hidden">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                    <h2 style="margin:0;">Manage Supervisors</h2>
+                    <button class="btn btn-outline" style="width: auto; padding: 5px 15px;" onclick="openSupervisorForm()">+ Add</button>
+                </div>
+                <div id="admin-supervisors-list"></div>
+            </div>
+
+            <!-- History View -->
+            <div id="content-history" class="container hidden">
+                <h2>Attendance History</h2>
+                <div style="display: flex; gap: 10px; margin-bottom: 20px; align-items: flex-end; flex-wrap: wrap;">
+                    <div style="flex:1; min-width: 150px; max-width: 250px;">
+                        <label style="font-size: 14px; font-weight: bold; color: #555;">Month</label>
+                        <input type="month" id="hist-month" class="input-field" style="margin-top: 5px;" onchange="handleMonthChange()">
+                    </div>
+                    <div>
+                        <button class="btn btn-outline" style="width: auto; margin:0; padding: 10px 20px;" onclick="document.getElementById('adv-filters').classList.toggle('hidden')">
+                            Filters
+                        </button>
+                    </div>
+                    <div>
+                        <select class="input-field" style="margin:0; width: auto; padding: 10px; cursor: pointer;" onchange="if(this.value) { exportHistory(this.value); this.value=''; }">
+                            <option value="">Export Data...</option>
+                            <option value="csv">Export as CSV</option>
+                            <option value="excel">Export as Excel</option>
+                            <option value="pdf">Export as Full PDF</option>
+                            <option value="compressed_pdf">Export as Compressed PDF</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Advanced Filters (Hidden by Default) -->
+                <div id="adv-filters" class="card hidden" style="margin-bottom: 20px; background: var(--table-summary-bg); border: 1px solid var(--border-color); padding: 15px;">
+                    <h3 style="margin-top: 0; margin-bottom: 15px; font-size: 16px;">Advanced Filters</h3>
+                    <div style="display: flex; gap: 10px; flex-wrap: wrap; align-items: flex-end;">
+                        <div style="flex:1; min-width: 120px;">
+                            <label style="font-size: 12px; color: var(--text-color);">Start Date</label>
+                            <input type="date" id="hist-start" class="input-field" style="margin-top: 5px; font-size:14px;" onchange="document.getElementById('hist-month').value=''">
+                        </div>
+                        <div style="flex:1; min-width: 120px;">
+                            <label style="font-size: 12px; color: var(--text-color);">End Date</label>
+                            <input type="date" id="hist-end" class="input-field" style="margin-top: 5px; font-size:14px;" onchange="document.getElementById('hist-month').value=''">
+                        </div>
+                        <div style="flex:1; min-width: 130px;">
+                            <label style="font-size: 12px; color: var(--text-color);">Filter by Role</label>
+                            <select id="hist-role" class="input-field" style="margin-top: 5px; font-size:14px;">
+                                <option value="All">All Roles</option>
+                            </select>
+                        </div>
+                        <div style="flex:1; min-width: 140px;">
+                            <label style="font-size: 12px; color: var(--text-color);">Filter by Name</label>
+                            <input type="text" id="hist-name" class="input-field" style="margin-top: 5px; font-size:14px;" placeholder="Employee Name...">
+                        </div>
+                        <div>
+                            <button class="btn btn-solid" style="width: auto; margin:0; padding: 10px 20px;" onclick="renderHistory()">Apply</button>
+                        </div>
+                    </div>
+                </div>
+                
+                <div style="overflow-x: auto; margin-top: 20px;">
+                    <table id="history-table">
+                        <!-- History Data -->
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modals -->
+    <div id="settings-modal" class="modal-overlay hidden" onclick="if(event.target===this) closeSettings()">
+        <div class="modal-content">
+            <h2 style="margin-top:0;">Settings</h2>
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                <span>Light Theme</span>
+                <label class="toggle-switch">
+                    <input type="checkbox" id="theme-toggle" onchange="toggleTheme(this.checked)">
+                    <span class="slider"></span>
+                </label>
+            </div>
+            <div style="color: #888; font-style: italic; border-top: 1px solid var(--border-color); padding-top: 15px; text-align: center;">
+                <span style="font-size: 20px; display:block; margin-bottom: 5px;">🚧</span>
+                Updates are coming soon...<br>(Payroll & SMS)
+            </div>
+            <div style="text-align: center; margin-top: 20px; font-size: 12px; color: #888; font-style: normal; line-height: 1.6;">
+                <strong>Ray Attendance</strong><br>
+                Version V.2.0.1<br>
+                Developed by Bhanupratap Ray<br>
+                Email: bhanupratapray39@gmail.com<br>
+                Mobile: +91 7232842354
+            </div>
+            <button class="btn btn-outline" onclick="closeSettings()" style="margin-top: 20px;">Close</button>
+        </div>
+    </div>
+
+    <!-- Worker Edit Modal -->
+    <div id="worker-modal" class="modal-overlay hidden" onclick="if(event.target===this) this.classList.add('hidden')">
+        <div class="modal-content">
+            <h2 style="margin-top:0;">Edit Worker</h2>
+            <input type="hidden" id="edit-w-id">
+            <input type="text" id="edit-w-name" class="input-field" placeholder="Name">
+            <input type="text" id="edit-w-contact" class="input-field" placeholder="Contact">
+            <input type="text" id="edit-w-role" class="input-field" placeholder="Role">
+            <button class="btn btn-success" onclick="saveWorker()">Save</button>
+            <button class="btn btn-danger" onclick="removeWorker()">Remove Worker</button>
+            <button class="btn btn-outline" onclick="document.getElementById('worker-modal').classList.add('hidden')">Cancel</button>
+        </div>
+    </div>
+
+    <!-- Supervisor Edit Modal -->
+    <div id="supervisor-modal" class="modal-overlay hidden" onclick="if(event.target===this) this.classList.add('hidden')">
+        <div class="modal-content">
+            <h2 style="margin-top:0;" id="sup-modal-title">Edit Supervisor</h2>
+            <input type="text" id="edit-s-id" class="input-field" placeholder="Supervisor ID">
+            <input type="text" id="edit-s-name" class="input-field" placeholder="Name">
+            <input type="password" id="edit-s-pin" class="input-field" placeholder="PIN (4-Digits)">
+            
+            <div style="margin-top: 10px; margin-bottom: 10px;">
+                <label>Shift Control Permission:</label>
+                <select id="edit-s-shift" class="input-field" style="margin-top: 5px;">
+                    <option value="Auto">Auto (Strict Mode)</option>
+                    <option value="Manual">Manual (Select by Supervisor)</option>
+                </select>
+            </div>
+            
+            <button class="btn btn-success" onclick="saveSupervisor()">Save</button>
+            <button class="btn btn-danger" id="btn-remove-sup" onclick="removeSupervisor()">Remove Supervisor</button>
+            <button class="btn btn-outline" onclick="document.getElementById('supervisor-modal').classList.add('hidden')">Cancel</button>
+        </div>
+    </div>
+
+    <!-- Shift Details Modal -->
+    <div id="shift-details-modal" class="modal-overlay hidden" onclick="if(event.target===this) this.classList.add('hidden')">
+        <div class="modal-content">
+            <h2 style="margin-top:0;" id="shift-details-title">Shift Details</h2>
+            <div id="shift-details-list" style="margin-bottom: 20px; max-height: 300px; overflow-y: auto; text-align: left;">
+            </div>
+            <button class="btn btn-outline" onclick="document.getElementById('shift-details-modal').classList.add('hidden')">Close</button>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+    <script src="admin.js"></script>
+</body>
+</html>
