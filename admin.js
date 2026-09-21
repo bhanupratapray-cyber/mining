@@ -125,7 +125,7 @@ function handleFileSelect(e) {
 }
 
 function downloadTemplate() {
-    const content = "Employee_Name,Employee_Gender,Role,Contact_Number\nJohn Doe,M,Driver,1234567890";
+    const content = "Employee_Name,Employee_Gender,Role,Contact_Number,Father_Name,PAN_Card_Number,Aadhar_Number,Date_of_Birth,Bank_Account_Number,Joining_Date,Custom_1,Custom_2,Custom_3\nJohn Doe,M,Driver,1234567890,Richard Doe,ABCDE1234F,123456789012,1990-01-01,123456789,2023-01-01,,,";
     const blob = new Blob([content], { type: 'text/csv' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
@@ -150,7 +150,16 @@ async function processUpload() {
                     Employee_Name: cols[0],
                     Employee_Gender: cols[1],
                     Role: cols[2],
-                    Contact_Number: cols[3]
+                    Contact_Number: cols[3],
+                    Father_Name: cols[4] || '',
+                    PAN_Card_Number: cols[5] || '',
+                    Aadhar_Number: cols[6] || '',
+                    Date_of_Birth: cols[7] || '',
+                    Bank_Account_Number: cols[8] || '',
+                    Joining_Date: cols[9] || '',
+                    Custom_1: cols[10] || '',
+                    Custom_2: cols[11] || '',
+                    Custom_3: cols[12] || ''
                 });
             }
         }
@@ -207,6 +216,15 @@ function openWorkerForm(id) {
     document.getElementById('edit-w-name').value = w.name || '';
     document.getElementById('edit-w-contact').value = w.contact || '';
     document.getElementById('edit-w-role').value = w.role || '';
+    document.getElementById('edit-w-fatherName').value = w.Father_Name || '';
+    document.getElementById('edit-w-pan').value = w.PAN_Card_Number || '';
+    document.getElementById('edit-w-aadhar').value = w.Aadhar_Number || '';
+    document.getElementById('edit-w-dob').value = w.Date_of_Birth || '';
+    document.getElementById('edit-w-bank').value = w.Bank_Account_Number || '';
+    document.getElementById('edit-w-join').value = w.Joining_Date || '';
+    document.getElementById('edit-w-c1').value = w.Custom_1 || '';
+    document.getElementById('edit-w-c2').value = w.Custom_2 || '';
+    document.getElementById('edit-w-c3').value = w.Custom_3 || '';
     document.getElementById('worker-modal').classList.remove('hidden');
 }
 
@@ -223,6 +241,15 @@ async function saveWorker() {
         workers[wIndex].name = document.getElementById('edit-w-name').value;
         workers[wIndex].contact = document.getElementById('edit-w-contact').value;
         workers[wIndex].role = document.getElementById('edit-w-role').value;
+        workers[wIndex].Father_Name = document.getElementById('edit-w-fatherName').value;
+        workers[wIndex].PAN_Card_Number = document.getElementById('edit-w-pan').value;
+        workers[wIndex].Aadhar_Number = document.getElementById('edit-w-aadhar').value;
+        workers[wIndex].Date_of_Birth = document.getElementById('edit-w-dob').value;
+        workers[wIndex].Bank_Account_Number = document.getElementById('edit-w-bank').value;
+        workers[wIndex].Joining_Date = document.getElementById('edit-w-join').value;
+        workers[wIndex].Custom_1 = document.getElementById('edit-w-c1').value;
+        workers[wIndex].Custom_2 = document.getElementById('edit-w-c2').value;
+        workers[wIndex].Custom_3 = document.getElementById('edit-w-c3').value;
         
         try {
             await fetch(SCRIPT_URL, {
@@ -762,4 +789,3 @@ function openShiftDetails(date, shift) {
 }
 
 document.addEventListener('DOMContentLoaded', loadData);
-
