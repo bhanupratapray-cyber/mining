@@ -1,0 +1,30 @@
+{
+  "name": "bhanupratapray-cybermining",
+  "version": "1.0.0",
+  "description": "",
+  "main": "admin.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/bhanupratapray-cyber/mining.git"
+  },
+  "keywords": [],
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/bhanupratapray-cyber/mining/issues"
+  },
+  "homepage": "https://github.com/bhanupratapray-cyber/mining#readme",
+  "dependencies": {
+    "@capacitor/core": "^8.5.2"
+  },
+  "devDependencies": {
+    "@capacitor/android": "^8.5.2",
+    "@capacitor/assets": "^3.0.5",
+    "@capacitor/cli": "^8.5.2"
+  },
+  "allowScripts": {
+    "sharp@0.32.6": true
+  }
+}
