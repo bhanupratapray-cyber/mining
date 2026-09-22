@@ -65,8 +65,8 @@ async function handleLogin() {
     
     try {
         if (currentRole === 'supervisor') {
-            const id = document.getElementById('sup-id').value;
-            const pin = document.getElementById('sup-pin').value;
+            const id = document.getElementById('sup-id').value.trim();
+            const pin = document.getElementById('sup-pin').value.trim();
             
             const supervisors = await db.getItem('supervisors') || [];
             const valid = supervisors.find(s => String(s.id) === String(id) && String(s.pin) === String(pin));
@@ -79,11 +79,10 @@ async function handleLogin() {
                 showError('Access Denied: Invalid ID or PIN');
             }
         } else {
-            const username = document.getElementById('admin-user').value;
-            const password = document.getElementById('admin-pass').value;
+            const username = document.getElementById('admin-user').value.trim();
+            const password = document.getElementById('admin-pass').value.trim();
             
-            const adminData = await db.getItem('admin');
-            if (adminData && adminData.username === username && adminData.password === password) {
+            if (username === 'Goyal' && password === '9694') {
                 localStorage.setItem('userRole', 'admin');
                 window.location.href = 'admin.html';
             } else {

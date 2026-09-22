@@ -98,7 +98,7 @@ function renderWorkers() {
     
     listContainer.innerHTML = filteredWorkers.map(w => `
         <div class="list-item card" style="margin-bottom:10px;">
-            <div>
+            <div style="flex: 1; text-align: left;">
                 <h3 style="margin: 0 0 5px 0;">${w.name}</h3>
                 <p style="margin: 0; color: #888; font-size: 14px;">ID: ${w.id}</p>
             </div>

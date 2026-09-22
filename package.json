@@ -17,7 +17,8 @@
   },
   "homepage": "https://github.com/bhanupratapray-cyber/mining#readme",
   "dependencies": {
-    "@capacitor/core": "^8.5.2"
+    "@capacitor/core": "^8.5.2",
+    "@capacitor/filesystem": "^8.1.3"
   },
   "devDependencies": {
     "@capacitor/android": "^8.5.2",
