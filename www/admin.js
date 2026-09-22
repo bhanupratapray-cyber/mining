@@ -23,12 +23,20 @@ async function downloadFileCapacitor(filename, dataBase64, mimeType) {
                 }
             }
 
+            let uniqueFilename = filename;
+            const lastDotIndex = filename.lastIndexOf('.');
+            if (lastDotIndex !== -1) {
+                uniqueFilename = filename.substring(0, lastDotIndex) + '_' + Date.now() + filename.substring(lastDotIndex);
+            } else {
+                uniqueFilename = filename + '_' + Date.now();
+            }
+
             await Filesystem.writeFile({
-                path: filename,
+                path: uniqueFilename,
                 data: dataBase64,
                 directory: 'DOCUMENTS'
             });
-            alert("File saved to Documents folder: " + filename);
+            alert("File saved to Documents folder: " + uniqueFilename);
             return true;
         } catch (e) {
             alert("Download failed: " + e.message);
