@@ -24,9 +24,6 @@ jobs:
       - name: Install Dependencies
         run: npm install
 
-      - name: Sync Capacitor
-        run: npx cap sync
-
       - name: Setup Java
         uses: actions/setup-java@v4
         with:
@@ -35,6 +32,9 @@ jobs:
 
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v4
+
+      - name: Sync Capacitor
+        run: npx cap sync
 
       - name: Build Android APK
         run: |
