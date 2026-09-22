@@ -7,6 +7,22 @@ async function downloadFileCapacitor(filename, dataBase64, mimeType) {
                 alert("Please install @capacitor/filesystem plugin to enable downloads on Android.");
                 return false;
             }
+            
+            if (Filesystem.checkPermissions && Filesystem.requestPermissions) {
+                try {
+                    let status = await Filesystem.checkPermissions();
+                    if (status.publicStorage !== 'granted') {
+                        status = await Filesystem.requestPermissions();
+                    }
+                    if (status.publicStorage !== 'granted') {
+                        alert("Storage permission denied. Cannot save file.");
+                        return false;
+                    }
+                } catch (permError) {
+                    console.log("Permission check skipped/failed: ", permError);
+                }
+            }
+
             await Filesystem.writeFile({
                 path: filename,
                 data: dataBase64,
