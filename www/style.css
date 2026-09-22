@@ -1,3 +1,6 @@
+* { box-sizing: border-box; }
+html, body { overflow-x: hidden; scroll-behavior: smooth; }
+
 :root {
     --bg-color: #121212;
     --text-color: #ffffff;
@@ -128,6 +131,10 @@ body {
     justify-content: space-between;
     align-items: center;
     letter-spacing: -0.5px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+    position: sticky;
+    top: 0;
+    z-index: 1000;
 }
 
 .header a { color: var(--text-color); text-decoration: none; font-size: 14px; font-weight: 500; }
@@ -267,14 +274,26 @@ body {
 .card {
     background-color: var(--card-bg);
     padding: 20px;
-    border-radius: 12px;
+    border-radius: 16px;
     margin-bottom: 15px;
     border: 1px solid var(--border-color);
-    box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+    box-shadow: 0 8px 24px rgba(0,0,0,0.12);
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+.card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 12px 32px rgba(0,0,0,0.2);
 }
 
 [data-theme="light"] .card {
-    box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+    box-shadow: 0 8px 24px rgba(0,0,0,0.06);
+}
+[data-theme="light"] .card:hover {
+    box-shadow: 0 12px 32px rgba(0,0,0,0.1);
+}
+.card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 12px 32px rgba(0,0,0,0.2);
 }
 
 .list-item {

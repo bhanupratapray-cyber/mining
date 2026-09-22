@@ -2,17 +2,41 @@
 async function downloadFileCapacitor(filename, dataBase64, mimeType) {
     if (window.Capacitor && window.Capacitor.isNativePlatform()) {
         try {
-            const { Filesystem, Directory } = window.Capacitor.Plugins;
+            const { Filesystem } = window.Capacitor.Plugins;
             if (!Filesystem) {
                 alert("Please install @capacitor/filesystem plugin to enable downloads on Android.");
                 return false;
             }
+            
+            if (Filesystem.checkPermissions && Filesystem.requestPermissions) {
+                try {
+                    let status = await Filesystem.checkPermissions();
+                    if (status.publicStorage !== 'granted') {
+                        status = await Filesystem.requestPermissions();
+                    }
+                    if (status.publicStorage !== 'granted') {
+                        alert("Storage permission denied. Cannot save file.");
+                        return false;
+                    }
+                } catch (permError) {
+                    console.log("Permission check skipped/failed: ", permError);
+                }
+            }
+
+            let uniqueFilename = filename;
+            const lastDotIndex = filename.lastIndexOf('.');
+            if (lastDotIndex !== -1) {
+                uniqueFilename = filename.substring(0, lastDotIndex) + '_' + Date.now() + filename.substring(lastDotIndex);
+            } else {
+                uniqueFilename = filename + '_' + Date.now();
+            }
+
             await Filesystem.writeFile({
-                path: filename,
+                path: uniqueFilename,
                 data: dataBase64,
-                directory: Directory.Documents
+                directory: 'DOCUMENTS'
             });
-            alert("File saved to Documents folder: " + filename);
+            alert("File saved to Documents folder: " + uniqueFilename);
             return true;
         } catch (e) {
             alert("Download failed: " + e.message);
