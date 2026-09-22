@@ -2,7 +2,7 @@
 async function downloadFileCapacitor(filename, dataBase64, mimeType) {
     if (window.Capacitor && window.Capacitor.isNativePlatform()) {
         try {
-            const { Filesystem, Directory } = window.Capacitor.Plugins;
+            const { Filesystem } = window.Capacitor.Plugins;
             if (!Filesystem) {
                 alert("Please install @capacitor/filesystem plugin to enable downloads on Android.");
                 return false;
@@ -10,7 +10,7 @@ async function downloadFileCapacitor(filename, dataBase64, mimeType) {
             await Filesystem.writeFile({
                 path: filename,
                 data: dataBase64,
-                directory: Directory.Documents
+                directory: 'DOCUMENTS'
             });
             alert("File saved to Documents folder: " + filename);
             return true;
